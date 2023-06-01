@@ -247,7 +247,7 @@ public class JdbcDbWriterTest {
                             .field("__dbz_physicalTableIdentifier", Schema.STRING_SCHEMA)
                             .build();
 
-    Struct valueStruct = new Struct(valueSchema1)
+    Struct valueStruct = new Struct(valueSchema)
                             .put("author", "Tom Robbins")
                             .put("title", "Villa Incognito")
                             .put("__dbz_physicalTableIdentifier", "books");
