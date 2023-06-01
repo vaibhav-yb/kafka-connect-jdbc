@@ -271,6 +271,13 @@ public class JdbcDbWriterTest {
         @Override
         public void read(ResultSet rs) throws SQLException {
           assertEquals(1, rs.getInt(1));
+
+          // Also assert that there is no field named __dbz_physicalTableIdentifier
+          try {
+            rs.getString("__dbz_physicalTableIdentifier");
+          } catch (SQLException sqle) {
+            assertTrue(sqle.getMessage().contains("no such column: '__dbz_physicalTableIdentifier'"));
+          }
         }
       })
     );
