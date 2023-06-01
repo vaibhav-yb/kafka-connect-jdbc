@@ -236,15 +236,18 @@ public class JdbcDbWriterTest {
 
     writer = newWriter(props);
 
-    Schema keySchema = Schema.INT64_SCHEMA;
+    Schema keySchema = SchemaBuilder.struct()
+                         .field("id", Schema.INT32_SCHEMA);
+    Struct keyStruct = new Struct(keySchema)
+                        .put("id", 1);
 
-    Schema valueSchema1 = SchemaBuilder.struct()
+    Schema valueSchema = SchemaBuilder.struct()
                             .field("author", Schema.STRING_SCHEMA)
                             .field("title", Schema.STRING_SCHEMA)
                             .field("__dbz_physicalTableIdentifier", Schema.STRING_SCHEMA)
                             .build();
 
-    Struct valueStruct1 = new Struct(valueSchema1)
+    Struct valueStruct = new Struct(valueSchema1)
                             .put("author", "Tom Robbins")
                             .put("title", "Villa Incognito")
                             .put("__dbz_physicalTableIdentifier", "books");
@@ -253,12 +256,13 @@ public class JdbcDbWriterTest {
                             .field("status", Schema.STRING_SCHEMA);
     Struct beginStruct = new Struct(txnSchema).put("status", "BEGIN");
 
-    Struct endStruct = new Struct(txnSchema).put("status", "BEGIN");
+    Struct endStruct = new Struct(txnSchema).put("status", "END");
 
+    // Put the same schema and value in transactional records for ease of use.
     List<SinkRecord> records = new ArrayList<>();
-    records.add(new SinkRecord(topic, 0, keySchema, 0L, txnSchema, beginStruct, 0));
-    records.add(new SinkRecord(topic, 0, keySchema, 1L, valueSchema1, valueStruct1, 1));
-    records.add(new SinkRecord(topic, 0, keySchema, 2L, txnSchema, endStruct, 2));
+    records.add(new SinkRecord(topic, 0, txnSchema, beginStruct, txnSchema, beginStruct, 0));
+    records.add(new SinkRecord(topic, 0, keySchema, keyStruct, valueSchema, valueStruct, 1));
+    records.add(new SinkRecord(topic, 0, txnSchema, endStruct, txnSchema, endStruct, 2));
     writer.writeConsistently(records);
 
     assertEquals(
