@@ -281,6 +281,23 @@ public class JdbcDbWriterTest {
         }
       })
     );
+
+    // Verify that the writer handles tombstone records gracefully as well.
+    List<SinkRecord> deleteRecords = new ArrayList<>();
+    deleteRecords.add(new SinkRecord(topic, 0, txnSchema, beginStruct, txnSchema, beginStruct, 3));
+    deleteRecords.add(new SinkRecord(topic, 0, keySchema, keyStruct, valueSchema, valueStruct, 4));
+    deleteRecords.add(new SinkRecord(topic, 0, keySchema, keyStruct, null, null, 5));
+    deleteRecords.add(new SinkRecord(topic, 0, txnSchema, endStruct, txnSchema, endStruct, 6));
+
+    assertEquals(
+      0,
+      sqliteHelper.select("select count(*) from books", new SqliteHelper.ResultSetReadCallback() {
+        @Override
+        public void read(ResultSet rs) throws SQLException {
+          assertEquals(0, rs.getInt(1));
+        }
+      })
+    );
   }
 
   @Test(expected = SQLException.class)
